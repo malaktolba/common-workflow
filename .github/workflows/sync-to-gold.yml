@@ -4,13 +4,9 @@ on:
 jobs:
  sync:
    runs-on: self-hosted
-   permissions:
-     contents: write
-     pull-requests: write
    steps:
      - name: Generate GitHub App token
-       id: generate_token
-       uses: tibdex/github-app-token@v2
+       uses: actions/create-github-app-token@v1
        with:
          app_id: ${{ secrets.APP_ID }}
          private_key: ${{ secrets.PRIVATE_KEY }}
