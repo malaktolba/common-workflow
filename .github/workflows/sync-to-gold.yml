@@ -1,43 +1,52 @@
-name: My first workflow
-
+name: Sync to Gold
 on:
-  workflow_dispatch:
-
+ workflow_dispatch:
 jobs:
-  job1:
-    runs-on: self-hosted
-    steps:
-      - name: Get GitHub App Token
-        uses: actions/create-github-app-token@v1
-        id: token
-        with:
-          app_id: ${{ vars.GITHUB_APP_ID }}
-          private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
-
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          repository: malaktolba/gold
-          token: ${{ steps.token.outputs.token }}
-          ref: master
-
-      - name: Change something
-        run: echo "hello from workflow" >> log.txt
-
-      - name: Create Pull Request
-        id: cpr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ steps.token.outputs.token }}
-          commit-message: "added log.txt from workflow"
-          branch: malak
-          base: master
-          title: "Beginner test PR"
-          body: "This pull request was made by my workflow."
-
-      - name: Merge Pull Request
-        uses: peter-evans/merge-pull-request@v3
-        with:
-          token: ${{ steps.token.outputs.token }}
-          pull-request: ${{ steps.cpr.outputs.pull-request-number }}
-          merge-method: squash
+ sync:
+   runs-on: self-hosted
+   permissions:
+     contents: write
+     pull-requests: write
+   steps:
+     - name: Generate GitHub App token
+       id: generate_token
+       uses: tibdex/github-app-token@v2
+       with:
+         app_id: ${{ secrets.APP_ID }}
+         private_key: ${{ secrets.PRIVATE_KEY }}
+     - name: Checkout gold repo
+       uses: actions/checkout@v4
+       with:
+         repository: your-org/gold
+         token: ${{ steps.generate_token.outputs.token }}
+         path: gold
+     - name: Make change
+       run: |
+         cd gold
+         echo "Automated update at $(date)" >> CHANGELOG.md
+     - name: Commit changes
+       run: |
+         cd gold
+         git config user.name "github-actions[bot]"
+         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+         git checkout -b automation/update-${{ github.run_id }}
+         git add .
+         git commit -m "Automated update from common-workflows"
+     - name: Push branch
+       run: |
+         cd gold
+         git push origin HEAD
+     - name: Create PR
+       id: create_pr
+       uses: peter-evans/create-pull-request@v6
+       with:
+         token: ${{ steps.generate_token.outputs.token }}
+         commit-message: "Automated update from common-workflows"
+         branch: automation/update-${{ github.run_id }}
+         title: "Automated update from common-workflows"
+         body: "This PR was auto-generated."
+     - name: Merge PR
+       run: |
+         gh pr merge ${{ steps.create_pr.outputs.pull-request-number }} --merge --admin
+       env:
+         GH_TOKEN: ${{ steps.generate_token.outputs.token }}
