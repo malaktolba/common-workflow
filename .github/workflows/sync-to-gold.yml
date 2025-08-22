@@ -4,6 +4,17 @@ on:
   workflow_dispatch:
 
 jobs:
- 
+  my-job:
+    runs-on: self-hosted
 
-   
+    steps:
+      - name: Generate GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app_id: ${{ vars.GITHUB_APP_ID }}
+          private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
+
+      - name: Checkout gold repo using App Token
+        run: |
+          git clone https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/YOUR_ORG/gold.git
