@@ -10,39 +10,37 @@ jobs:
        with:
          app_id: ${{ secrets.APP_ID }}
          private_key: ${{ secrets.PRIVATE_KEY }}
-     - name: Checkout gold repo
-       uses: actions/checkout@v4
-       with:
-         repository: malaktolba/gold.git
-         token: ${{ steps.generate_token.outputs.token }}
-         path: gold
-     - name: Make change
-       run: |
-         cd gold
-         echo "Automated update at $(date)" >> CHANGELOG.md
-     - name: Commit changes
-       run: |
-         cd gold
-         git config user.name "github-actions[bot]"
-         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-         git checkout -b automation/update-${{ github.run_id }}
-         git add .
-         git commit -m "Automated update from common-workflows"
-     - name: Push branch
-       run: |
-         cd gold
-         git push origin HEAD
-     - name: Create PR
-       id: create_pr
-       uses: peter-evans/create-pull-request@v6
-       with:
-         token: ${{ steps.generate_token.outputs.token }}
-         commit-message: "Automated update from common-workflows"
-         branch: automation/update-${{ github.run_id }}
-         title: "Automated update from common-workflows"
-         body: "This PR was auto-generated."
-     - name: Merge PR
-       run: |
-         gh pr merge ${{ steps.create_pr.outputs.pull-request-number }} --merge --admin
-       env:
-         GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+ update-gold:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v3
+
+      - name: Clone gold repo
+        run: |
+          git config --global user.name "Auto Bot"
+          git config --global user.email "bot@example.com"
+          git clone https://x-access-token:${{ secrets.GOLD_PAT }}@github.com/<owner>/gold.git
+          cd gold
+          echo "Automated update on $(date)" >> README.md
+          git checkout -b update-readme
+          git add README.md
+          git commit -m "Automated update to README"
+          git push origin update-readme
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GOLD_PAT }}
+          repository: <owner>/gold
+          title: "Automated README Update"
+          body: "This PR was created by a GitHub Actions workflow."
+          base: master
+          head: update-readme
+
+      - name: Auto-merge PR
+        run: |
+          gh pr merge update-readme --repo <owner>/gold --merge --admin
+        env:
+          GH_TOKEN: ${{ secrets.GOLD_PAT }}
