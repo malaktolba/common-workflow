@@ -17,15 +17,19 @@ jobs:
           owner: malaktolba
           repositories: gold
 
-      - name: Clone gold repo and create update-readme branch
+      - name: Clone gold repo and prepare update-readme branch
         run: |
           git config --global user.name "Auto Bot"
           git config --global user.email "bot@example.com"
           git clone https://x-access-token:${{ steps.generate_token.outputs.token }}@github.com/malaktolba/gold.git gold
           cd gold
           git fetch origin main
-          git branch -D update-readme || true
-          git checkout -b update-readme origin/main
+          if git show-ref --verify --quiet refs/heads/update-readme; then
+            git checkout update-readme
+            git reset --hard origin/main
+          else
+            git checkout -b update-readme origin/main
+          fi
           echo "Automated update on $(date)" >> README.md
           git add README.md
           git commit -m "Automated README update"
