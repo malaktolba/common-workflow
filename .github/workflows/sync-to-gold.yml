@@ -19,15 +19,12 @@ jobs:
 
       - name: Clone gold repo
         run: |
-          git config --global user.name "Auto Bot"
-          git config --global user.email "bot@example.com"
-          git clone https://x-access-token:${{ secrets.GOLD_PAT }}@github.com/<owner>/gold.git
-          cd gold
-          echo "Automated update on $(date)" >> README.md
-          git checkout -b update-readme
-          git add README.md
-          git commit -m "Automated update to README"
-          git push origin update-readme
+            git config --global user.name "Auto Bot"
+            git config --global user.email "bot@example.com"
+            git clone https://x-access-token:${{ secrets.GOLD_PAT }}@github.com/<owner>/gold.git
+        env:
+            GIT_TERMINAL_PROMPT: 0
+
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
