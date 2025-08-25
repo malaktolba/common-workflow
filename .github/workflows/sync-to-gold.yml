@@ -21,7 +21,7 @@ jobs:
         run: |
             git config --global user.name "Auto Bot"
             git config --global user.email "bot@example.com"
-            git clone https://x-access-token:${{ secrets.GOLD_PAT }}@github.com/<owner>/gold.git
+            git clone https://x-access-token:${{ secrets.GOLD_PAT }}@github.com/malaktolba/gold.git
         env:
             GIT_TERMINAL_PROMPT: 0
 
